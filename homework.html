@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+  <title>Document</title>
+  <style>
+    *,
+    body {
+      height: 100%;
+    }
+
+    #bac {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      background: url(./images/背景.jpg)no-repeat center/cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    button{
+      height: 40%;
+    }
+    .title{
+      font-size: 1rem;
+      height: 10vh;
+      text-align: center;
+      display: none;
+    }
+    #game {
+      /* background: red;  */
+      width: 40%;
+      height: 60%;
+    }
+
+    .card {
+      width: 75px;
+      height: 125px;
+      position: relative;
+      /* 設定子元素在3D空間內 */
+      transform-style: preserve-3d;
+      float: left;
+      margin: 10px;
+      transition: transform 1s;
+      display: none;
+    }
+
+    .card-front {
+      width: 100%;
+      height: 100%;
+      background-image: url(./images/1-1.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      /* 把花色翻轉到下面 */
+      transform: rotateY(180deg);
+    }
+
+    .card-back {
+      width: 100%;
+      height: 100%;
+      background-image: url(./images/生肖背面.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      /* 隱藏另一面 */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .card-open {
+      transform: rotateY(180deg);
+    }
+    .btn{
+      display: flex;
+      align-self: flex-end;
+      height: 20%;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="bac">
+  <div class="title">
+    <h1>十二地支與生肖</h1>
+  </div>
+  <div id="game"></div>
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="./jquery-3.6.0.min.js"></script>
+  <script>
+    const audio = new Audio()
+
+    Swal.fire({
+      width: 650,
+      padding: '3em',
+      background: '#fff url(./images/alert.png)no-repeat center/cover',
+      backdrop: `
+    rgba(0,0,123,0.4)
+    url(./images/alert_tiger.png)
+    left bottom
+    no-repeat
+  `,
+    customClass:{
+    confirmButton: 'btn',
+      }
+    }).then((result) => {
+      $('.card').css({
+        display: 'block'
+      })
+      $('.title').css({
+        display: 'block'
+      })
+    })
+
+    for (let i = 0; i < 24; i++) {
+      $('#game').append(`
+    <div class="card">
+    <div class="card-front"></div>
+    <div class="card-back"></div>
+  </div>
+  `)
+    }
+
+    for (let i = 0; i < 24; i++) {
+      const num = i % 12 + 1
+      if (i <= 11) {
+        $('.card').eq(i).find('.card-front').css('background-image', `url(./images/${num}-1.png)`)
+        $('.card').eq(i).attr('data-card', num)
+      } else {
+        $('.card').eq(i).find('.card-front').css('background-image', `url(./images/${num}-2.png)`)
+        $('.card').eq(i).attr('data-card', num)
+      }
+      const target = Math.round(Math.random() * 15)
+      $('.card').eq(target).insertAfter($('.card').eq(i))
+    }
+
+    $('#game').on('click', '.card', function () {
+      if ($('.card-open').length < 2 && !$(this).hasClass('card-open')) {
+        $(this).addClass('card-open')
+      }
+      if ($('.card-open').length == 2) {
+        if ($('.card-open').eq(0).attr('data-card') == $('.card-open').eq(1).attr('data-card')) {
+          $('.card-open').addClass('card-ok')
+          $('.card-open .card-front').fadeTo(1000, 0)
+            setTimeout(function(){
+              let aa=$('.card-open').attr('data-card')
+              audio.src=`./video/video${aa}.mp3`
+              audio.play()
+              Swal.fire({
+              width: 650,
+              padding: '3em',
+              background: `url(./images/alert-${aa}.jpg)no-repeat center/cover`,
+              backdrop: `
+              rgba(0,0,123,0.4)
+              url(./images/alert_tiger.png)
+              left bottom
+              no-repeat
+              `,
+              customClass:{
+              confirmButton: 'btn',
+            }
+              })
+            },800)
+          $("h1").text("答對了!").css('color','blue')
+        }
+
+        setTimeout(() => {
+          $('.card-open').each(function () {
+            if ($(this).find('.card-front').css('opacity') != 1) {
+              $(this).css('opacity', 0)
+            }
+          })
+          $('.card-open').removeClass('card-open')
+          $("h1").text("十二地支與生肖").css('color','black')
+          if ($('.card-ok').length == 24) {
+            Swal.fire({
+              title: '恭喜過關',
+              imageUrl:'./images/alert_tiger.png',
+            })
+            $("h1").text("你好棒!").css({'color':'red','font-size':'5rem'})
+            audio.src='./rihai.mp3'
+            audio.play()
+          }
+        }, 1500)
+      }
+    }
+    )
+  </script>
+</body>
+
+</html>
